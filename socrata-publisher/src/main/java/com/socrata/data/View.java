@@ -86,10 +86,10 @@ public class View extends Model<View>
     String displayType;
     Integer viewCount;
     String viewType;
-    List<String> flags;
-    List<String> rights;
-    List<String> tags;
-    List<Column> columns;
+    List<String> flags = new ArrayList<String>();
+    List<String> rights = new ArrayList<String>();
+    List<String> tags = new ArrayList<String>();
+    List<Column> columns = new ArrayList<Column>();
 
     public String getId()
     {
@@ -267,6 +267,11 @@ public class View extends Model<View>
         {
             this.columns = columns;
         }
+    }
+
+    public void addColumn(Column col)
+    {
+        getColumns().add(col);
     }
 
     /**
