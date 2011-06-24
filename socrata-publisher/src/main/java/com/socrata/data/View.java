@@ -4,6 +4,7 @@ import com.socrata.api.Connection;
 import com.socrata.api.RequestException;
 import com.socrata.api.Response;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -31,12 +32,13 @@ import java.util.Map;
 public class View extends Model<View>
 {
     @JsonIgnoreProperties(ignoreUnknown=true)
-    public static class Column
+    public static class Column extends Model<Column>
     {
         int id;
         String name;
         String dataTypeName;
         int width;
+        View view;
 
         public int getId()
         {
@@ -76,6 +78,53 @@ public class View extends Model<View>
         public void setWidth(int width)
         {
             this.width = width;
+        }
+
+        @JsonIgnore
+        public View getView()
+        {
+            return view;
+        }
+
+        void setView(View view)
+        {
+            this.view = view;
+        }
+
+        @Override
+        String path()
+        {
+            return "/views/" + getView().getId() + "/columns";
+        }
+
+        @Override
+        public Column create(Connection request) throws RequestException
+        {
+            return super.create(request, Column.class);
+        }
+
+        @Override
+        public Column update(Connection request) throws RequestException
+        {
+            return super.update(Integer.toString(getId()), request, Column.class);
+        }
+
+        @Override
+        public void delete(Connection request) throws RequestException
+        {
+            super.delete(Integer.toString(getId()), request);
+        }
+
+        @Override
+        public Column clone()
+        {
+            Column clone = new Column();
+            clone.setDataTypeName(getDataTypeName());
+            clone.setId(getId());
+            clone.setName(getName());
+            clone.setWidth(getWidth());
+
+            return clone;
         }
     }
 
@@ -203,7 +252,13 @@ public class View extends Model<View>
 
     public static View find(String id, Connection conn) throws RequestException
     {
-        return new View().get(id, conn, View.class);
+        View view = new View().get(id, conn, View.class);
+        for (Column col : view.getColumns())
+        {
+            col.setView(view);
+        }
+
+        return view;
     }
 
     static class Blueprint
@@ -289,7 +344,35 @@ public class View extends Model<View>
     @Override
     public View update(Connection conn) throws RequestException
     {
-        return update(getId(), conn, View.class);
+        List<Column> mutatableColumns = new ArrayList<Column>();
+        for (Column col : getColumns())
+        {
+            if (col.getId() == 0)
+            {
+                // This column hasn't been created before. We can't create
+                // columns by calling PUT /views/<4x4>.json, so we need to
+                // POST these directly to the columns service.
+                col = col.clone();
+                col.setView(this);
+                col = col.create(conn);
+            }
+
+            mutatableColumns.add(col);
+        }
+
+        // Now that we've created any column that needed to be created, we need
+        // to *set* the column temporarily to our ideal set of columns...
+
+        List<Column> unmutableColumns = getColumns();
+        try
+        {
+            setColumns(mutatableColumns);
+            return update(getId(), conn, View.class);
+        }
+        finally
+        {
+            setColumns(unmutableColumns);
+        }
     }
 
     /**

@@ -73,7 +73,7 @@ public abstract class Model<T>
 
     String path()
     {
-        return "/" + Inflector.getInstance().pluralize(this.getClass().getSimpleName());
+        return "/" + Inflector.getInstance().pluralize(this.getClass().getSimpleName().toLowerCase());
     }
 
     public <T extends Model> T get(String id, Connection request, Class<T> type) throws RequestException
