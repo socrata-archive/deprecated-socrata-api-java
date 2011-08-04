@@ -412,6 +412,7 @@ public class View extends Model<View>
     {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
+        params.putSingle("method", "copy");
 
         Response response = conn.post(publicationEndpoint(), params);
         validate(response);
@@ -428,6 +429,7 @@ public class View extends Model<View>
     {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
+        params.putSingle("method", "copy");
 
         Response response = conn.post(publicationEndpoint(), params);
         while (response.status == 202)
