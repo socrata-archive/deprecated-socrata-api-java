@@ -384,6 +384,10 @@ public class View extends Model<View>
         delete(getId(), conn);
     }
 
+    private String publicationEndpoint() {
+      return base + "/views/" + getId() + "/publication";
+    }
+
     /**
      * Publish a dataset. If there's an already published dataset in this
      * publication group, then it will be automatically snapshotted.
@@ -394,7 +398,7 @@ public class View extends Model<View>
     {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
-        Response response = conn.post(base + "/publication", params);
+        Response response = conn.post(publicationEndpoint(), params);
         return results(response, View.class);
     }
 
@@ -409,7 +413,7 @@ public class View extends Model<View>
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
 
-        Response response = conn.post(base + "/publication", params);
+        Response response = conn.post(publicationEndpoint(), params);
         validate(response);
     }
 
@@ -425,12 +429,12 @@ public class View extends Model<View>
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
 
-        Response response = conn.post(base + "/publication", params);
+        Response response = conn.post(publicationEndpoint(), params);
         while (response.status == 202)
         {
             try { Thread.sleep(1000l); } catch (InterruptedException e) {}
 
-            response = conn.get(base + "/publication", params);
+            response = conn.get(publicationEndpoint(), params);
         }
 
         return results(response, View.class);
