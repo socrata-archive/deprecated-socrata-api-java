@@ -603,7 +603,7 @@ public class View extends Model<View>
                 Map<String, Object> ticket = (Map<String, Object>)mapper.readValue(response.body, Object.class);
 
                 // TODO: Error checking.
-                params.putSingle("ticket", ticket.get("id").toString());
+                params.putSingle("ticket", ticket.get("ticket").toString());
             }
             catch (IOException e)
             {
