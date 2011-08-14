@@ -434,7 +434,7 @@ public class View extends Model<View>
         Response response = conn.post(publicationEndpoint(), params);
         while (response.status == 202)
         {
-            try { Thread.sleep(1000l); } catch (InterruptedException e) {}
+            try { Thread.sleep(ticketCheck); } catch (InterruptedException e) {}
 
             response = conn.get(publicationEndpoint(), params);
         }
@@ -595,7 +595,7 @@ public class View extends Model<View>
         Response response = conn.post(base + "/imports2", params);
         while (response.status == 202)
         {
-            try { Thread.sleep(1000l); } catch (InterruptedException e) {}
+            try { Thread.sleep(ticketCheck); } catch (InterruptedException e) {}
 
             try
             {

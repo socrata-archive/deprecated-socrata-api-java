@@ -15,6 +15,7 @@ public abstract class Model<T>
     public abstract void delete(Connection request) throws RequestException;
 
     static final String base = "https://opendata.socrata.com/api";
+    static final long ticketCheck = 10000L;
 
     <T> T deserialize(String serializedBody, Class<T> type) throws RequestException
     {
