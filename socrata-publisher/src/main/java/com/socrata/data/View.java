@@ -131,6 +131,7 @@ public class View extends Model<View>
     String id;
     String name;
     String description;
+    Integer rowIdentifierColumnId;
     Long rowsUpdatedAt;
     String displayType;
     Integer viewCount;
@@ -168,6 +169,48 @@ public class View extends Model<View>
     public void setColumns(List<Column> columns)
     {
         this.columns = columns;
+    }
+
+    @JsonIgnore
+    public Column getColumnById(int id)
+    {
+        for (Column column : this.columns)
+        {
+            if (column.id == id)
+            {
+                return column;
+            }
+        }
+        return null;
+    }
+
+    private Integer getRowIdentifierColumnId()
+    {
+        return rowIdentifierColumnId;
+    }
+
+    private void setRowIdentifierColumnId(Integer id)
+    {
+        this.rowIdentifierColumnId = id;
+    }
+
+    @JsonIgnore
+    public Column getRowIdentifierColumn()
+    {
+        if (this.rowIdentifierColumnId == null)
+        {
+            return null;
+        }
+        return getColumnById(this.rowIdentifierColumnId);
+    }
+
+    public void setRowIdentifierColumn(Column column)
+    {
+        if (column.getView() != this)
+        {
+            throw new IllegalArgumentException("The column given is not a part of this view.");
+        }
+        this.rowIdentifierColumnId = column.id;
     }
 
     public Long getRowsUpdatedAt()
