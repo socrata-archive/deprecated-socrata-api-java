@@ -55,7 +55,7 @@ public abstract class Model<T>
         }
     }
 
-    void validate(Response response) throws RequestException
+    void verifyResponseCode(Response response) throws RequestException
     {
         switch (response.status)
         {
@@ -80,12 +80,12 @@ public abstract class Model<T>
     public <T extends Model> T get(String id, Connection request, Class<T> type) throws RequestException
     {
         Response response = request.get(base + path() + "/" + id);
-        return results(response, type);
+        return result(response, type);
     }
 
     public void delete(String id, Connection request) throws RequestException
     {
-        validate(request.delete(base + path() + "/" + id));
+        verifyResponseCode(request.delete(base + path() + "/" + id));
     }
 
     public <T extends Model> T update(String id, Connection request, Class<T> type) throws RequestException

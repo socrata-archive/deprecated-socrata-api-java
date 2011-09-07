@@ -458,7 +458,7 @@ public class View extends Model<View>
         params.putSingle("method", "copy");
 
         Response response = conn.post(publicationEndpoint(), params);
-        validate(response);
+        verifyResponseCode(response);
     }
 
     /**
@@ -498,7 +498,7 @@ public class View extends Model<View>
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("method", "scan");
         Response response = conn.post(base + "/imports2", params, file);
-        validate(response);
+        verifyResponseCode(response);
 
         try
         {
