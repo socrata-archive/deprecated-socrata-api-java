@@ -45,7 +45,7 @@ public class View extends Model<View>
             return id;
         }
 
-        public void setId(int id)
+        private void setId(int id)
         {
             this.id = id;
         }
@@ -86,7 +86,7 @@ public class View extends Model<View>
             return view;
         }
 
-        void setView(View view)
+        private void setView(View view)
         {
             this.view = view;
         }
@@ -145,7 +145,7 @@ public class View extends Model<View>
         return id;
     }
 
-    public void setId(String id)
+    private void setId(String id)
     {
         this.id = id;
     }
@@ -175,7 +175,7 @@ public class View extends Model<View>
         return rowsUpdatedAt;
     }
 
-    public void setRowsUpdatedAt(Long rowsUpdatedAt)
+    private void setRowsUpdatedAt(Long rowsUpdatedAt)
     {
         this.rowsUpdatedAt = rowsUpdatedAt;
     }
@@ -205,7 +205,7 @@ public class View extends Model<View>
         return viewCount;
     }
 
-    public void setViewCount(Integer viewCount)
+    private void setViewCount(Integer viewCount)
     {
         this.viewCount = viewCount;
     }
