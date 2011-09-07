@@ -4,6 +4,7 @@ import com.socrata.api.Connection;
 import com.socrata.api.RequestException;
 import com.socrata.api.Response;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.codehaus.jackson.annotate.JsonAnySetter;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -11,9 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * "Views" are effectively data entities. They can be tabular data, file data,
@@ -125,6 +124,165 @@ public class View extends Model<View>
             clone.setWidth(getWidth());
 
             return clone;
+        }
+    }
+
+    public static class Row extends Model<Row>
+    {
+        int position;
+        UUID id;
+        int sid;
+        Date updatedAt;
+        Date createdAt;
+        Map<Integer, Object> data;
+        View view;
+
+        public Row()
+        {
+            this.data = new HashMap<Integer, Object>();
+        }
+
+        @JsonIgnore
+        public int getPosition()
+        {
+            return position;
+        }
+
+        private void setPosition(int position)
+        {
+            this.position = position;
+        }
+
+        @JsonIgnore
+        public UUID getId()
+        {
+            return id;
+        }
+
+        private void setId(UUID id)
+        {
+            this.id = id;
+        }
+
+        public int getSid()
+        {
+            return sid;
+        }
+
+        private void setSid(int sid)
+        {
+            this.sid = sid;
+        }
+
+        @JsonIgnore
+        public Date getUpdatedAt()
+        {
+            return updatedAt;
+        }
+
+        private void setUpdatedAt(Date updatedAt)
+        {
+            this.updatedAt = updatedAt;
+        }
+
+        @JsonIgnore
+        public Date getCreatedAt()
+        {
+            return createdAt;
+        }
+
+        private void setCreatedAt(Date createdAt)
+        {
+            this.createdAt = createdAt;
+        }
+
+        @JsonIgnore
+        public View getView()
+        {
+            return this.view;
+        }
+
+        private void setView(View view)
+        {
+            this.view = view;
+        }
+
+        @JsonIgnore
+        public Map<Column, Object> getAllData() {
+            Map<Column, Object> result = new HashMap<Column, Object>();
+
+            for (Map.Entry<Integer, Object> entry : this.data.entrySet())
+            {
+                result.put(this.view.getColumnById(entry.getKey()), entry.getValue());
+            }
+
+            return result;
+        }
+
+        @JsonAnySetter
+        public void putDataField(String key, Object value)
+        {
+            // here we grab unknown properties and dump them in to our
+            // data hash
+
+            Integer columnId;
+            try
+            {
+                columnId = Integer.parseInt(key);
+            }
+            catch (NumberFormatException ex)
+            {
+                return; // we don't care about this field; it's not a column id
+            }
+
+            this.data.put(columnId, value);
+        }
+
+        public void putDataField(Column column, Object value)
+        {
+            if (column == null)
+            {
+                throw new IllegalArgumentException("Must supply a column to set data.");
+            }
+
+            this.data.put(column.id, value);
+        }
+
+        public Object getDataField(Column column)
+        {
+            return this.data.get(column.getId());
+        }
+
+        @Override
+        String path()
+        {
+            return "/views/" + getView().getId() + "/rows";
+        }
+
+        @Override
+        public Row create(Connection request) throws RequestException
+        {
+            return super.create(request, Row.class);
+        }
+
+        @Override
+        public Row update(Connection request) throws RequestException
+        {
+            return super.update(Integer.toString(getSid()), request, Row.class);
+        }
+
+        @Override
+        public void delete(Connection request) throws RequestException
+        {
+            super.delete(Integer.toString(getSid()), request);
+        }
+
+        @Override
+        public Row clone()
+        {
+            Row row = new Row();
+            row.data = this.data; // TODO: ideally we should clone the data too... somehow
+            return row;
         }
     }
 
@@ -293,6 +451,44 @@ public class View extends Model<View>
         this.tags = tags;
     }
 
+    /* row operations */
+
+    public Row getRow(int sid, Connection conn) throws RequestException
+    {
+        return getRow(Integer.toString(sid), conn);
+    }
+
+    public Row getRow(String identifier, Connection conn) throws RequestException
+    {
+        if (identifier == null)
+        {
+            throw new IllegalArgumentException("A row identifier must be provided to get a row.");
+        }
+
+        Row row = new Row();
+        row.setView(this);
+        row = row.get(identifier, conn, Row.class);
+
+        return row;
+    }
+
+    public List<Row> getRows(int start, int length, Connection conn) throws RequestException
+    {
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.putSingle("method", "getRows");
+        params.putSingle("start", Integer.toString(start));
+        params.putSingle("length", Integer.toString(length));
+        Response response = conn.post(base + path() + "/" + this.id + "/rows", params);
+        return results(response, Row.class);
+    }
+
+    public Row appendRow(Row row, Connection conn) throws RequestException
+    {
+        row = row.clone();
+        row.setView(this);
+        return row.create(conn);
+    }
+
     public static View find(String id, Connection conn) throws RequestException
     {
         View view = new View().get(id, conn, View.class);
@@ -442,7 +638,7 @@ public class View extends Model<View>
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
         Response response = conn.post(publicationEndpoint(), params);
-        return results(response, View.class);
+        return result(response, View.class);
     }
 
     /**
@@ -482,7 +678,7 @@ public class View extends Model<View>
             response = conn.get(publicationEndpoint(), params);
         }
 
-        return results(response, View.class);
+        return result(response, View.class);
     }
 
     /**
@@ -656,6 +852,6 @@ public class View extends Model<View>
             response = conn.get(base + "/imports2", params);
         }
 
-        return results(response, View.class);
+        return result(response, View.class);
     }
 }

@@ -5,8 +5,12 @@ import com.sun.jersey.core.impl.provider.entity.Inflector;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
 
 public abstract class Model<T>
 {
@@ -39,12 +43,77 @@ public abstract class Model<T>
         }
     }
 
-    <T extends Model> T results(Response response, Class<T> type) throws RequestException
+    <T> List<T> deserializeList(String serializedBody, final Class<T> type) throws RequestException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+
+        final Type listType = new ParameterizedType()
+        {
+            @Override
+            public Type[] getActualTypeArguments() {
+                return new Type[] { type };
+            }
+
+            @Override
+            public Type getRawType() {
+                return List.class;
+            }
+
+            @Override
+            public Type getOwnerType() {
+                return null;
+            }
+        };
+
+        try
+        {
+            // HACK: note that the TypeReference here doesn't actually care what type
+            // you give it; we override it in getType() immediately to deal with Javaness.
+            return mapper.readValue(serializedBody, new TypeReference<Object>()
+            {
+                @Override
+                public Type getType()
+                {
+                    return listType;
+                }
+            });
+        }
+        catch (JsonMappingException e)
+        {
+            throw new RequestException("Invalid response does not appear to be a " + type.toString() + ".", e);
+        }
+        catch (JsonParseException e)
+        {
+            throw new RequestException("Invalid json in response. Unable to parse.", e);
+        }
+        catch (IOException e)
+        {
+            throw new RequestException("There was a problem parsing the response.", e);
+        }
+    }
+
+    <T extends Model> T result(Response response, Class<T> type) throws RequestException
     {
         switch (response.status)
         {
             case 200:
                 return deserialize(response.body, type);
+            case 401:
+            case 403:
+                throw deserialize(response.body, UnauthorizedException.class);
+            case 404:
+                throw deserialize(response.body, NotFoundException.class);
+            default:
+                throw deserialize(response.body, RequestException.class);
+        }
+    }
+
+    <T extends Model> List<T> results (Response response, Class<T> type) throws RequestException
+    {
+        switch (response.status)
+        {
+            case 200:
+                return deserializeList(response.body, type);
             case 401:
             case 403:
                 throw deserialize(response.body, UnauthorizedException.class);
@@ -95,7 +164,7 @@ public abstract class Model<T>
             ObjectMapper mapper = new ObjectMapper();
             Response response = request.put(base + path() + "/" + id, mapper.writeValueAsString(this));
 
-            return results(response, type);
+            return result(response, type);
         }
         catch (IOException e)
         {
@@ -110,7 +179,7 @@ public abstract class Model<T>
             ObjectMapper mapper = new ObjectMapper();
             Response response = request.post(base + path(), mapper.writeValueAsString(this));
 
-            return results(response, type);
+            return result(response, type);
         }
         catch (IOException e)
         {
