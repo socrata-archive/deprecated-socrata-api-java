@@ -21,13 +21,21 @@ public abstract class Model<T>
     static final String base = "https://opendata.socrata.com/api";
     static final long ticketCheck = 10000L;
 
-    <T> T deserialize(String serializedBody, Class<T> type) throws RequestException
+    <T> T deserialize(String serializedBody, boolean intoSelf, Class<T> type) throws RequestException
     {
         ObjectMapper mapper = new ObjectMapper();
 
         try
         {
-            return mapper.readValue(serializedBody, type);
+            if (intoSelf)
+            {
+                mapper.updatingReader(this).readValue(serializedBody);
+                return (T) this;
+            }
+            else
+            {
+                return mapper.readValue(serializedBody, type);
+            }
         }
         catch (JsonMappingException e)
         {
@@ -92,19 +100,19 @@ public abstract class Model<T>
         }
     }
 
-    <T extends Model> T result(Response response, Class<T> type) throws RequestException
+    <T extends Model> T result(Response response, boolean intoSelf, Class<T> type) throws RequestException
     {
         switch (response.status)
         {
             case 200:
-                return deserialize(response.body, type);
+                return deserialize(response.body, intoSelf, type);
             case 401:
             case 403:
-                throw deserialize(response.body, UnauthorizedException.class);
+                throw deserialize(response.body, false, UnauthorizedException.class);
             case 404:
-                throw deserialize(response.body, NotFoundException.class);
+                throw deserialize(response.body, false, NotFoundException.class);
             default:
-                throw deserialize(response.body, RequestException.class);
+                throw deserialize(response.body, false, RequestException.class);
         }
     }
 
@@ -116,11 +124,11 @@ public abstract class Model<T>
                 return deserializeList(response.body, type);
             case 401:
             case 403:
-                throw deserialize(response.body, UnauthorizedException.class);
+                throw deserialize(response.body, false, UnauthorizedException.class);
             case 404:
-                throw deserialize(response.body, NotFoundException.class);
+                throw deserialize(response.body, false, NotFoundException.class);
             default:
-                throw deserialize(response.body, RequestException.class);
+                throw deserialize(response.body, false, RequestException.class);
         }
     }
 
@@ -133,11 +141,11 @@ public abstract class Model<T>
                 break;
             case 401:
             case 403:
-                throw deserialize(response.body, UnauthorizedException.class);
+                throw deserialize(response.body, false, UnauthorizedException.class);
             case 404:
-                throw deserialize(response.body, NotFoundException.class);
+                throw deserialize(response.body, false, NotFoundException.class);
             default:
-                throw deserialize(response.body, RequestException.class);
+                throw deserialize(response.body, false, RequestException.class);
         }
     }
 
@@ -149,7 +157,7 @@ public abstract class Model<T>
     public <T extends Model> T get(String id, Connection request, Class<T> type) throws RequestException
     {
         Response response = request.get(base + path() + "/" + id);
-        return result(response, type);
+        return result(response, false, type);
     }
 
     public void delete(String id, Connection request) throws RequestException
@@ -164,7 +172,7 @@ public abstract class Model<T>
             ObjectMapper mapper = new ObjectMapper();
             Response response = request.put(base + path() + "/" + id, mapper.writeValueAsString(this));
 
-            return result(response, type);
+            return result(response, false, type);
         }
         catch (IOException e)
         {
@@ -179,7 +187,7 @@ public abstract class Model<T>
             ObjectMapper mapper = new ObjectMapper();
             Response response = request.post(base + path(), mapper.writeValueAsString(this));
 
-            return result(response, type);
+            return result(response, false, type);
         }
         catch (IOException e)
         {

@@ -3,10 +3,12 @@ package com.socrata.data;
 import com.socrata.api.Connection;
 import com.socrata.api.RequestException;
 import com.socrata.api.Response;
+import com.socrata.util.Strings;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.codehaus.jackson.annotate.JsonAnySetter;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -33,9 +35,12 @@ public class View extends Model<View>
     @JsonIgnoreProperties(ignoreUnknown=true)
     public static class Column extends Model<Column>
     {
+        private static final String[] RESERVED_FIELD_NAMES = { "_id", "_uuid", "_position", "_address" };
+
         int id;
         String name;
         String dataTypeName;
+        int position;
         int width;
         View view;
 
@@ -69,6 +74,16 @@ public class View extends Model<View>
             this.dataTypeName = dataTypeName;
         }
 
+        public int getPosition()
+        {
+            return width;
+        }
+
+        public void setPosition(int position)
+        {
+            this.position = position;
+        }
+
         public int getWidth()
         {
             return width;
@@ -88,6 +103,43 @@ public class View extends Model<View>
         private void setView(View view)
         {
             this.view = view;
+        }
+
+        @JsonIgnore
+        protected String getFieldName()
+        {
+            if (name == null)
+            {
+                return null;
+            }
+
+            String fieldName = Strings.underscoreize(name);
+
+            List<Column> columns = view.getColumns();
+            for (Column column : columns)
+            {
+                if (this == column)
+                {
+                    continue;
+                }
+
+                if (Strings.underscoreize(column.getName()).equals(fieldName))
+                {
+                    fieldName += "_" + position;
+                    return fieldName;
+                }
+            }
+
+            for (String reservedName : RESERVED_FIELD_NAMES)
+            {
+                if (reservedName.equals(fieldName))
+                {
+                    fieldName += "_" + position;
+                    return fieldName;
+                }
+            }
+
+            return fieldName;
         }
 
         @Override
@@ -121,6 +173,7 @@ public class View extends Model<View>
             clone.setDataTypeName(getDataTypeName());
             clone.setId(getId());
             clone.setName(getName());
+            clone.setPosition(getPosition());
             clone.setWidth(getWidth());
 
             return clone;
@@ -130,7 +183,7 @@ public class View extends Model<View>
     public static class Row extends Model<Row>
     {
         int position;
-        UUID id;
+        String id;
         int sid;
         Date updatedAt;
         Date createdAt;
@@ -154,12 +207,12 @@ public class View extends Model<View>
         }
 
         @JsonIgnore
-        public UUID getId()
+        public String getId()
         {
             return id;
         }
 
-        private void setId(UUID id)
+        private void setId(String id)
         {
             this.id = id;
         }
@@ -202,7 +255,7 @@ public class View extends Model<View>
             return this.view;
         }
 
-        private void setView(View view)
+        protected void setView(View view)
         {
             this.view = view;
         }
@@ -248,6 +301,7 @@ public class View extends Model<View>
             this.data.put(column.id, value);
         }
 
+        @JsonIgnore
         public Object getDataField(Column column)
         {
             return this.data.get(column.getId());
@@ -283,6 +337,57 @@ public class View extends Model<View>
             Row row = new Row();
             row.data = this.data; // TODO: ideally we should clone the data too... somehow
             return row;
+        }
+    }
+
+    @JsonIgnoreProperties({ "address" })
+    private static class SingleRow extends Row
+    {
+        @JsonProperty("_uuid")
+        public void setId(String id)
+        {
+            super.setId(id);
+        }
+
+        @JsonProperty("_id")
+        public void setSid(Integer sid)
+        {
+            super.setSid(sid);
+        }
+
+        @JsonProperty("_position")
+        public void setPosition(Integer position)
+        {
+            super.setSid(position);
+        }
+
+        @JsonProperty("_address")
+        public void setAddress(String address)
+        {
+            // don't care.
+        }
+
+        @Override
+        @JsonAnySetter
+        public void putDataField(String key, Object value)
+        {
+            // look through our columns to see which matches
+            for (Column column : view.getColumns())
+            {
+                if (key.equals(column.getFieldName()))
+                {
+                    data.put(column.getId(), value);
+                    return;
+                }
+            }
+
+            // if nothing matched, it's not a column, so we don't care.
+        }
+
+        public SingleRow get(String id, Connection request) throws RequestException
+        {
+            Response response = request.get(base + path() + "/" + id);
+            return result(response, true, SingleRow.class);
         }
     }
 
@@ -465,9 +570,9 @@ public class View extends Model<View>
             throw new IllegalArgumentException("A row identifier must be provided to get a row.");
         }
 
-        Row row = new Row();
+        SingleRow row = new SingleRow();
         row.setView(this);
-        row = row.get(identifier, conn, Row.class);
+        row = row.get(identifier, conn);
 
         return row;
     }
@@ -638,7 +743,7 @@ public class View extends Model<View>
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
         Response response = conn.post(publicationEndpoint(), params);
-        return result(response, View.class);
+        return result(response, false, View.class);
     }
 
     /**
@@ -678,7 +783,7 @@ public class View extends Model<View>
             response = conn.get(publicationEndpoint(), params);
         }
 
-        return result(response, View.class);
+        return result(response, false, View.class);
     }
 
     /**
@@ -852,6 +957,6 @@ public class View extends Model<View>
             response = conn.get(base + "/imports2", params);
         }
 
-        return result(response, View.class);
+        return result(response, false, View.class);
     }
 }
