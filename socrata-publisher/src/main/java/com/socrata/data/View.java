@@ -5,10 +5,7 @@ import com.socrata.api.RequestException;
 import com.socrata.api.Response;
 import com.socrata.util.Strings;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.*;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -100,7 +97,7 @@ public class View extends Model<View>
             return view;
         }
 
-        private void setView(View view)
+        public void setView(View view)
         {
             this.view = view;
         }
@@ -273,7 +270,7 @@ public class View extends Model<View>
         }
 
         @JsonAnySetter
-        public void putDataField(String key, Object value)
+        protected void putDataField(String key, Object value)
         {
             // here we grab unknown properties and dump them in to our
             // data hash
@@ -305,6 +302,18 @@ public class View extends Model<View>
         public Object getDataField(Column column)
         {
             return this.data.get(column.getId());
+        }
+
+        @JsonAnyGetter
+        public Map<String, Object> getDataFieldsForSerialization()
+        {
+            Map<String, Object> result = new HashMap<String, Object>();
+            for (Map.Entry<Integer, Object> entry : this.data.entrySet())
+            {
+                result.put(entry.getKey().toString(), entry.getValue());
+            }
+
+            return result;
         }
 
         @Override
@@ -369,7 +378,7 @@ public class View extends Model<View>
 
         @Override
         @JsonAnySetter
-        public void putDataField(String key, Object value)
+        protected void putDataField(String key, Object value)
         {
             // look through our columns to see which matches
             for (Column column : view.getColumns())
