@@ -74,3 +74,48 @@ Note that currently the socrata API doesn't support publishing. There is a publi
     View v = View.find("robo-tics", conn);
     View newlyeditable = v.copy(conn);
     // [...] perform some edit operation on it.
+
+Retrieving a single row
+-----------------------
+
+    Connection c = new HttpConnection("facilities.doe.gov", "clint.tseng@socrata.com", "******", "******");
+    View v = View.find("faci-ltes", conn);
+    View.Row r = v.getRow(1);
+
+    // let's see what's in the first column
+    Column col = v.getColumns().get(0);
+    Object value = r.getDataField(col);
+
+Retrieving multiple rows
+------------------------
+
+    Connection c = new HttpConnection("facilities.doe.gov", "clint.tseng@socrata.com", "******", "******");
+    View v = View.find("faci-ltes", conn);
+
+    // get the first 200 rows
+    List<View.Row> r = v.getRows(0, 200, c);
+
+Creating a row
+--------------
+
+    Connection c = new HttpConnection("facilities.doe.gov", "clint.tseng@socrata.com", "******", "******");
+    View v = View.find("faci-ltes", conn);
+
+    Column col = v.getColumnById(128583);
+
+    View.Row r = new View.Row();
+    r.putDataField(col, "Test value");
+    v.appendRow(r);
+
+Updating or deleting a row
+--------------------------
+
+    Connection c = new HttpConnection("facilities.doe.gov", "clint.tseng@socrata.com", "******", "******");
+    View v = View.find("faci-ltes", conn);
+    View.Row r = v.getRow(1);
+
+    r.putDataField(v.getColumns().get(0), 3.14159);
+    r.update(c);
+
+    r.delete(c);
+
