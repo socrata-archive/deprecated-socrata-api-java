@@ -896,21 +896,30 @@ public class View extends Model<View>
      */
     public View append(File file, Connection conn) throws RequestException
     {
-        return append(file, "", conn);
+        return append(file, 0, "", conn);
+    }
+
+    /**
+     * Append rows to a dataset from a file.
+     * Skip indicates the number of rows to ignore on account of header data.
+     */
+    public View append(File file, int skip, Connection conn) throws RequestException
+    {
+        return append(file, skip, "", conn);
     }
 
     /**
      * Append rows to a dataset from a file. For details on the translation,
      * please see the publisher API docs.
      */
-    public View append(File file, String translation, Connection conn) throws RequestException
+    public View append(File file, int skip, String translation, Connection conn) throws RequestException
     {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("method", "append");
         params.putSingle("viewUid", getId());
         params.putSingle("name", file.getName());
         params.putSingle("translation", translation);
-        params.putSingle("skip", "0"); // TODO: Where should this plumb through?
+        params.putSingle("skip", Integer.toString(skip));
 
         return importinate(params, file, conn);
     }
@@ -920,21 +929,30 @@ public class View extends Model<View>
      */
     public View replace(File file, Connection conn) throws RequestException
     {
-        return replace(file, "", conn);
+        return replace(file, 0, "", conn);
+    }
+
+    /**
+     * Replace rows in a dataset (first delete, then append) from a file.
+     * Skip indicates the number of rows to ignore on account of header data.
+     */
+    public View replace(File file, int skip, Connection conn) throws RequestException
+    {
+        return replace(file, skip, "", conn);
     }
 
     /**
      * Replace rows in a dataset (first delete, then append) from a file. For
      * details on the translation, please see the publisher API docs.
      */
-    public View replace(File file, String translation, Connection conn) throws RequestException
+    public View replace(File file, int skip, String translation, Connection conn) throws RequestException
     {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("method", "replace");
         params.putSingle("viewUid", getId());
         params.putSingle("name", file.getName());
         params.putSingle("translation", translation);
-        params.putSingle("skip", "0"); // TODO: Where should this plumb through?
+        params.putSingle("skip", Integer.toString(skip));
 
         return importinate(params, file, conn);
     }
