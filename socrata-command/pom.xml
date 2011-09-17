@@ -1,0 +1,63 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.socrata</groupId>
+    <artifactId>socrata-command</artifactId>
+    <packaging>jar</packaging>
+    <version>0.0.1</version>
+
+    <name>Socrata Command Line</name>
+
+    <parent>
+        <groupId>com.socrata</groupId>
+        <artifactId>socrata-api</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.socrata</groupId>
+            <artifactId>socrata-publisher</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+	        <groupId>net.sf.opencsv</groupId>
+	        <artifactId>opencsv</artifactId>
+	        <version>2.0</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+          <id>Maven Central Repo</id>
+          <url>http://repo1.maven.org/maven2/</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+        <repository>
+            <id>maven2-repository.dev.java.net</id>
+            <name>Java.net Repository for Maven</name>
+            <url>http://download.java.net/maven/2/</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
+
+    <build>
+      <plugins>
+        <plugin>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <configuration>
+            <descriptorRefs>
+              <descriptorRef>jar-with-dependencies</descriptorRef>
+            </descriptorRefs>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+</project>
+
