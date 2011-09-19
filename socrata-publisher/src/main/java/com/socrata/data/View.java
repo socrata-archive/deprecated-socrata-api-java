@@ -36,6 +36,7 @@ public class View extends Model<View>
 
         int id;
         String name;
+        String description;
         String dataTypeName;
         int position;
         int width;
@@ -59,6 +60,16 @@ public class View extends Model<View>
         public void setName(String name)
         {
             this.name = name;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public void setDescription(String description)
+        {
+            this.description = description;
         }
 
         public String getDataTypeName()
@@ -619,6 +630,7 @@ public class View extends Model<View>
         static class BlueprintColumn
         {
             String name;
+            String description;
             String datatype;
 
             public String getName()
@@ -629,6 +641,16 @@ public class View extends Model<View>
             public void setName(String name)
             {
                 this.name = name;
+            }
+
+            public String getDescription()
+            {
+                return description;
+            }
+
+            public void setDescription(String description)
+            {
+                this.description = description;
             }
 
             public String getDatatype()
@@ -643,6 +665,7 @@ public class View extends Model<View>
         }
 
         String name;
+        String description;
         int skip;
         List<BlueprintColumn> columns;
 
@@ -654,6 +677,16 @@ public class View extends Model<View>
         public void setName(String name)
         {
             this.name = name;
+        }
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public void setDescription(String description)
+        {
+            this.description = description;
         }
 
         public int getSkip()
@@ -834,6 +867,7 @@ public class View extends Model<View>
         {
             Blueprint.BlueprintColumn bpCol = new Blueprint.BlueprintColumn();
             bpCol.setName(viewCol.getName());
+            bpCol.setDescription(viewCol.getDescription());
             bpCol.setDatatype(viewCol.getDataTypeName());
             cols.add(bpCol);
         }
@@ -850,6 +884,7 @@ public class View extends Model<View>
     {
         Blueprint bp = new Blueprint();
         bp.setName(getName());
+        bp.setDescription(getDescription());
         bp.setSkip(0); // TODO: Configure this somewhere?
         bp.setColumns(blueprintColumns());
 
