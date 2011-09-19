@@ -84,7 +84,7 @@ public class View extends Model<View>
 
         public int getPosition()
         {
-            return width;
+            return position;
         }
 
         public void setPosition(int position)
