@@ -28,16 +28,16 @@ public class Test {
         try {
             // Pick out our view
             View v = View.find("nv7g-i6b6", c);
-            System.out.println("View " + v.getId() + ": " + v.getName());
+            System.out.println("Dataset " + v.getId() + ": " + v.getName());
             for(View.Column col : v.getColumns()) {
-                System.out.println("\tColumn: " + col.getFieldName());
+                System.out.println("\tColumn: " + col.getFieldName() + ", " + col.getId());
             }
 
             // Mark it for publishing
             View draftCopy = v.copy(c);
             System.out.println("Draft Copy " + draftCopy.getId() + ": " + draftCopy.getName());
             for(View.Column col : draftCopy.getColumns()) {
-                System.out.println("\tColumn: " + col.getFieldName());
+                System.out.println("\tColumn: " + col.getFieldName() + ", " + col.getId());
             }
 
             // Read an update CSV
@@ -64,7 +64,7 @@ public class Test {
             }
 
             // Push records using the upsert API
-            View.BulkResults result = v.upsert(records, c);
+            View.BulkResults result = draftCopychfris.upsert(records, c);
             System.out.println("Updates: " + result.getRowsUpdated());
             System.out.println("Creates: " + result.getRowsCreated());
             System.out.println("Deleted: " + result.getRowsDeleted());

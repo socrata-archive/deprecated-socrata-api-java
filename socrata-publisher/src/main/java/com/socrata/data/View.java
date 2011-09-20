@@ -526,7 +526,6 @@ public class View extends Model<View>
     {
         for (Column column : this.columns)
         {
-            System.out.println("Column: " + column.getFieldName());
             if (column.getFieldName().equals(name))
             {
                 return column;
