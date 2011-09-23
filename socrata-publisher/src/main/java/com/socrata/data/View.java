@@ -860,6 +860,8 @@ public class View extends Model<View>
      */
     public View publish(Connection conn) throws RequestException
     {
+        this.waitForGeocoding(conn);
+
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.putSingle("viewId", getId());
         Response response = conn.post(publicationEndpoint(), params);
@@ -1023,6 +1025,34 @@ public class View extends Model<View>
         }
 
         return importinate(params, file, conn);
+    }
+
+    public int getPendingGeocodingRequests(Connection conn) throws RequestException
+    {
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.putSingle("method", "pending");
+
+        Response response = conn.get(base + "/geocoding/" + this.getId(), params);
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            Map<String, Object> result = (Map<String, Object>)mapper.readValue(response.body, Object.class);
+            return (Integer)result.get("view");
+        }
+        catch (IOException ex)
+        {
+            throw new RequestException("Unable to parse the response.", ex);
+        }
+    }
+
+    public void waitForGeocoding(Connection conn) throws RequestException
+    {
+        int pending = this.getPendingGeocodingRequests(conn);
+        while (pending > 0)
+        {
+            try { Thread.sleep(ticketCheck); } catch (InterruptedException e) {}
+            pending = this.getPendingGeocodingRequests(conn);
+        }
     }
 
     /**
