@@ -39,7 +39,7 @@ public class View extends Model<View>
         String description;
         String dataTypeName;
         int position;
-        int width;
+        Integer width;
         View view;
 
         public int getId()
@@ -92,7 +92,7 @@ public class View extends Model<View>
             this.position = position;
         }
 
-        public int getWidth()
+        public Integer getWidth()
         {
             return width;
         }
