@@ -39,7 +39,7 @@ public class View extends Model<View>
         String description;
         String dataTypeName;
         int position;
-        int width;
+        Integer width;
         View view;
 
         public int getId()
@@ -92,7 +92,7 @@ public class View extends Model<View>
             this.position = position;
         }
 
-        public int getWidth()
+        public Integer getWidth()
         {
             return width;
         }
@@ -909,6 +909,24 @@ public class View extends Model<View>
 
         // Refetch the view to get its full metadata
         return View.find(v.getId(), conn);
+    }
+
+    /**
+     * Copy a dataset synchronously. Behaves like copy(connection), except
+     * that it does not bother to copy the actual data in the source dataset.
+     * Useful if the operation you're immediately going to perform is a full
+     * row-replace anyway.
+     *
+     * @return The dataset that was created.
+     */
+    public View copySchema(Connection conn) throws RequestException
+    {
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.putSingle("viewId", getId());
+        params.putSingle("method", "copySchema");
+
+        Response response = conn.post(publicationEndpoint(), params);
+        return result(response, false, View.class);
     }
 
     /**
