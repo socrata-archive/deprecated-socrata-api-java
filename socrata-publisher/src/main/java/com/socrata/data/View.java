@@ -601,7 +601,7 @@ public class View extends Model<View>
     }
 
     @JsonIgnore
-    private Map<String, Object> getCustomMetadataFields(boolean fieldIsPublic)
+    public Map<String, Object> getCustomMetadataFields(boolean fieldIsPublic)
     {
         Map<String, Object> target = getMetadataContainer(fieldIsPublic);
         if (target == null)
@@ -612,7 +612,7 @@ public class View extends Model<View>
     }
 
     @JsonIgnore
-    private Map<String, Object> getCustomMetadataFields()
+    public Map<String, Object> getCustomMetadataFields()
     {
         return getCustomMetadataFields(true);
     }
