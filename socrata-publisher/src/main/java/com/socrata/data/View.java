@@ -484,10 +484,14 @@ public class View extends Model<View>
     String displayType;
     Integer viewCount;
     String viewType;
+    Map<String, Object> metadata;
+    Map<String, Object> privateMetadata;
     List<String> flags = new ArrayList<String>();
     List<String> rights = new ArrayList<String>();
     List<String> tags = new ArrayList<String>();
     List<Column> columns = new ArrayList<Column>();
+
+    private static final String CUSTOM_FIELDS_ID = "custom_fields";
 
     public String getId()
     {
@@ -652,6 +656,130 @@ public class View extends Model<View>
     public void setTags(List<String> tags)
     {
         this.tags = tags;
+    }
+
+    public Map<String, Object> getMetadata()
+    {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata)
+    {
+        this.metadata = metadata;
+    }
+
+    public Map<String, Object> getPrivateMetadata()
+    {
+        return privateMetadata;
+    }
+
+    public void setPrivateMetadata(Map<String, Object> privateMetadata)
+    {
+        this.privateMetadata = privateMetadata;
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getCustomMetadataFields(boolean fieldIsPublic)
+    {
+        Map<String, Object> target = getMetadataContainer(fieldIsPublic);
+        if (target == null)
+        {
+            return null;
+        }
+        return (Map<String, Object>)target.get(CUSTOM_FIELDS_ID);
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getCustomMetadataFields()
+    {
+        return getCustomMetadataFields(true);
+    }
+
+    @JsonIgnore
+    private Map<String, Object> getDeepValueCreatingAlongTheWay(Map<String, Object> container, String... keys)
+    {
+        if (container == null)
+        {
+            throw new IllegalArgumentException("Can't get deep values from a null map");
+        }
+        for(String key : keys)
+        {
+            Map<String, Object> child = (Map<String, Object>) container.get(key);
+            if (child == null)
+            {
+                child = new HashMap<String, Object>();
+                container.put(key, child);
+            }
+            container = child;
+        }
+        return container;
+    }
+
+    @JsonIgnore
+    private Map<String, Object> getMetadataContainer(boolean isPublic)
+    {
+        return isPublic ? getMetadata() : getPrivateMetadata();
+    }
+
+    /**
+     * Sets a custom metadata field's value
+     * @param fieldsetName The name of the fieldset
+     * @param fieldName The name of the field
+     * @param value The value to set
+     * @param fieldIsPublic Set on the publicly viewable metadata
+     */
+    public void setCustomMetadataField(String fieldsetName, String fieldName, String value, boolean fieldIsPublic)
+    {
+        Map<String, Object> target = getMetadataContainer(fieldIsPublic);
+        if (target == null)
+        {
+            target = new HashMap<String, Object>();
+            if (fieldIsPublic)
+            {
+                setMetadata(target);
+            }
+            else
+            {
+                setPrivateMetadata(target);
+            }
+        }
+        Map<String, Object> fieldset = getDeepValueCreatingAlongTheWay(
+                target, CUSTOM_FIELDS_ID, fieldsetName);
+        fieldset.put(fieldName, value);
+    }
+
+    /**
+     * Sets a custom metadata field's value on publicly viewable metadata
+     * @param fieldset The name of the fieldset
+     * @param field The name of the field
+     * @param value The value to set
+     */
+    public void setCustomMetadataField(String fieldset, String field, String value)
+    {
+        setCustomMetadataField(fieldset, field, value, true);
+    }
+
+    @JsonIgnore
+    /**
+     * Gets a value from the view's custom metadata
+     */
+    public String getCustomFieldValue(String fieldsetName, String fieldName, boolean fieldIsPublic)
+    {
+        Map<String, Object> customFields = getCustomMetadataFields(fieldIsPublic);
+        if (customFields == null)
+        {
+            return null;
+        }
+        return (String)getDeepValueCreatingAlongTheWay(customFields, fieldsetName).get(fieldName);
+    }
+
+    @JsonIgnore
+    /**
+     * Gets a value from the view's custom public metadata
+     */
+    public String getCustomFieldValue(String fieldsetName, String fieldName)
+    {
+        return getCustomFieldValue(fieldsetName, fieldName, true);
     }
 
     /* row operations */
