@@ -1058,24 +1058,6 @@ public class View extends Model<View>
     }
 
     /**
-     * Copy a dataset synchronously. Behaves like copy(connection), except
-     * that it does not bother to copy the actual data in the source dataset.
-     * Useful if the operation you're immediately going to perform is a full
-     * row-replace anyway.
-     *
-     * @return The dataset that was created.
-     */
-    public View copySchema(Connection conn) throws RequestException
-    {
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        params.putSingle("viewId", getId());
-        params.putSingle("method", "copySchema");
-
-        Response response = conn.post(publicationEndpoint(), params);
-        return result(response, false, View.class);
-    }
-
-    /**
      * Scans a file for import and returns the report as a map. The most
      * important piece of the result is the "fileId" field which is the sha256
      * of the file's contents. This is used by the import methods to tell the
