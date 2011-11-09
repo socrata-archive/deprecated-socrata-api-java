@@ -936,34 +936,49 @@ public class View extends Model<View>
     @Override
     public View update(Connection conn) throws RequestException
     {
-        List<Column> mutatableColumns = new ArrayList<Column>();
-        for (Column col : getColumns())
+        return update(conn, true);
+    }
+
+    /**
+     * Save the changes to a dataset or view.
+     */
+    public View update(Connection conn, boolean updateColumns) throws RequestException
+    {
+        if (updateColumns)
         {
-            if (col.getId() == 0)
+            List<Column> mutatableColumns = new ArrayList<Column>();
+            for (Column col : getColumns())
             {
-                // This column hasn't been created before. We can't create
-                // columns by calling PUT /views/<4x4>.json, so we need to
-                // POST these directly to the columns service.
-                col = col.clone();
-                col.setView(this);
-                col = col.create(conn);
+                if (col.getId() == 0)
+                {
+                    // This column hasn't been created before. We can't create
+                    // columns by calling PUT /views/<4x4>.json, so we need to
+                    // POST these directly to the columns service.
+                    col = col.clone();
+                    col.setView(this);
+                    col = col.create(conn);
+                }
+
+                mutatableColumns.add(col);
             }
 
-            mutatableColumns.add(col);
+            // Now that we've created any column that needed to be created, we need
+            // to *set* the column temporarily to our ideal set of columns...
+
+            List<Column> unmutableColumns = getColumns();
+            try
+            {
+                setColumns(mutatableColumns);
+                return update(getId(), conn, View.class);
+            }
+            finally
+            {
+                setColumns(unmutableColumns);
+            }
         }
-
-        // Now that we've created any column that needed to be created, we need
-        // to *set* the column temporarily to our ideal set of columns...
-
-        List<Column> unmutableColumns = getColumns();
-        try
+        else
         {
-            setColumns(mutatableColumns);
             return update(getId(), conn, View.class);
-        }
-        finally
-        {
-            setColumns(unmutableColumns);
         }
     }
 
