@@ -978,7 +978,17 @@ public class View extends Model<View>
         }
         else
         {
-            return update(getId(), conn, View.class);
+            List<Column> columns = this.getColumns();
+            this.setColumns(null);
+
+            try
+            {
+                return update(getId(), conn, View.class);
+            }
+            finally
+            {
+                this.setColumns(columns);
+            }
         }
     }
 
