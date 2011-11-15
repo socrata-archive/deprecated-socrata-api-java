@@ -64,7 +64,7 @@ public class Test {
             }
 
             // Push records using the upsert API
-            View.BulkResults result = draftCopychfris.upsert(records, c);
+            View.BulkResults result = draftCopy.upsert(records, c);
             System.out.println("Updates: " + result.getRowsUpdated());
             System.out.println("Creates: " + result.getRowsCreated());
             System.out.println("Deleted: " + result.getRowsDeleted());

@@ -363,6 +363,8 @@ public class View extends Model<View>
 
     public static class NewRow extends Row
     {
+    	private boolean deleted = false;
+    	
         @Override
         @JsonAnyGetter
         public Map<String, Object> getDataFieldsForSerialization()
@@ -372,8 +374,21 @@ public class View extends Model<View>
             {
                 result.put(":" + entry.getKey().toString(), entry.getValue());
             }
+            
+            // If we're deleted, mark it as such
+            result.put(":deleted", true);
 
             return result;
+        }
+        
+        public void setDeleted(boolean deleted)
+        {
+        	this.deleted = deleted;
+        }
+        
+        public boolean isDeleted()
+        {
+        	return this.deleted;
         }
     }
 
