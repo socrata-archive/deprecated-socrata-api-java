@@ -376,7 +376,9 @@ public class View extends Model<View>
             }
             
             // If we're deleted, mark it as such
-            result.put(":deleted", true);
+            if(this.deleted) {
+            	result.put(":deleted", true);
+            }
 
             return result;
         }
