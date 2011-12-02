@@ -55,10 +55,8 @@ Replacing the rows in an existing dataset
     View v = View.find("robo-tics", conn);
     v.replace(new File("/Users/sam/Desktop/snidely-whiplash-robots.csv"), conn);
 
-Publishing a dataset (Publishing sandbox-only)
-----------------------------------------------
-
-Note that currently the socrata API doesn't support publishing. There is a publishing playground if you wish to test the publishing feature before they're released and make sure that all your applications work as expected.
+Publishing a dataset
+--------------------
 
     Connection c = new HttpConnection("robots.dod.gov", "sam.gibson@socrata.com", "******", "******");
     View v = View.find("robo-tics", conn);
@@ -66,9 +64,6 @@ Note that currently the socrata API doesn't support publishing. There is a publi
 
 Creating an editable copy of a dataset
 --------------------------------------
-
-Note that currently the socrata API doesn't support publishing. There is a publishing playground if you wish to test the publishing feature before they're released and make sure that all your applications work as expected.
-
 
     Connection c = new HttpConnection("robots.dod.gov", "sam.gibson@socrata.com", "******", "******");
     View v = View.find("robo-tics", conn);
