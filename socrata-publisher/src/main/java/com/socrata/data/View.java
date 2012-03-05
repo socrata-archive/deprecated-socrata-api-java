@@ -451,6 +451,8 @@ public class View extends Model<View>
         int rowsDeleted;
         int rowsCreated;
         int errors;
+		int byRowIdentifier;
+		int bySid;
 
         @JsonProperty("Rows Updated")
         public int getRowsUpdated() {
@@ -471,7 +473,17 @@ public class View extends Model<View>
         public int getErrors() {
             return errors;
         }
+        
+        @JsonProperty("By RowIdentifier")
+        public int getByRowIdentifier() {
+        	return byRowIdentifier;
+        }
 
+        @JsonProperty("By SID")
+        public int getBySid() {
+        	return bySid;
+        }
+        
         @JsonProperty("Rows Updated")
         public void setRowsUpdated(int rowsUpdated) {
             this.rowsUpdated = rowsUpdated;
@@ -490,6 +502,16 @@ public class View extends Model<View>
         @JsonProperty("Errors")
         public void setErrors(int errors) {
             this.errors = errors;
+        }
+        
+        @JsonProperty("By RowIdentifier")
+        public void setByRowIdentifier(int count) {
+        	this.byRowIdentifier = count;
+        }
+        
+        @JsonProperty("By SID")
+        public void setBySid(int count) {
+        	this.bySid = count;
         }
     }
 
@@ -1072,7 +1094,7 @@ public class View extends Model<View>
         {
             try { Thread.sleep(ticketCheck); } catch (InterruptedException e) {}
 
-            response = conn.get(publicationEndpoint(), params);
+            response = conn.post(publicationEndpoint(), params);
         }
 
         View v = result(response, false, View.class);
