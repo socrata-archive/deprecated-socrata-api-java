@@ -43,7 +43,8 @@ public abstract class Model<T>
         }
         catch (JsonParseException e)
         {
-            throw new RequestException("Invalid json in response. Unable to parse. First 1000 charecters of response: " + serializedBody.substring(0, 1000), e);
+            int toShow = Math.min(1000, serializedBody.length());
+            throw new RequestException("Invalid json in response. Unable to parse. First " + toShow + " charecters of response: " + serializedBody.substring(0, toShow), e);
         }
         catch (IOException e)
         {
