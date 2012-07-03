@@ -157,6 +157,24 @@ public class View extends Model<View>
             return "/views/" + getView().getId() + "/columns";
         }
 
+        /**
+         * Checks, loosely, if a given value can be a used in a column.
+         * If this value is rejected, it is definitely the wrong type.
+         * If it passes, it may or may not actually work.
+         *
+         * @param value The candidate value
+         * @throws IllegalArgumentException if this value cannot possibly work in this column
+         */
+        public void checkType(Object value) throws IllegalArgumentException {
+            if("number".equalsIgnoreCase(dataTypeName)) {
+                if(value != null && !(value instanceof Number))
+                    throw new IllegalArgumentException("Number expected");
+            } else if("text".equalsIgnoreCase(dataTypeName)) {
+                if(value != null && !(value instanceof String))
+                    throw new IllegalArgumentException("String expected");
+            }
+        }
+
         @Override
         public Column create(Connection request) throws RequestException
         {
@@ -307,6 +325,7 @@ public class View extends Model<View>
                 throw new IllegalArgumentException("Must supply a column to set data.");
             }
 
+            column.checkType(value);
             this.data.put(column.id, value);
         }
 
