@@ -113,8 +113,9 @@ public class View extends Model<View>
             this.view = view;
         }
 
+        // TODO: This will need to be updated to reflect the API Identifier change when its deployed
         @JsonIgnore
-        protected String getFieldName()
+        public String getFieldName()
         {
             if (name == null)
             {
@@ -154,6 +155,24 @@ public class View extends Model<View>
         String path()
         {
             return "/views/" + getView().getId() + "/columns";
+        }
+
+        /**
+         * Checks, loosely, if a given value can be a used in a column.
+         * If this value is rejected, it is definitely the wrong type.
+         * If it passes, it may or may not actually work.
+         *
+         * @param value The candidate value
+         * @throws IllegalArgumentException if this value cannot possibly work in this column
+         */
+        public void checkType(Object value) throws IllegalArgumentException {
+            if("number".equalsIgnoreCase(dataTypeName)) {
+                if(value != null && !(value instanceof Number))
+                    throw new IllegalArgumentException("Number expected");
+            } else if("text".equalsIgnoreCase(dataTypeName)) {
+                if(value != null && !(value instanceof String))
+                    throw new IllegalArgumentException("String expected");
+            }
         }
 
         @Override
@@ -306,6 +325,7 @@ public class View extends Model<View>
                 throw new IllegalArgumentException("Must supply a column to set data.");
             }
 
+            column.checkType(value);
             this.data.put(column.id, value);
         }
 
@@ -360,6 +380,39 @@ public class View extends Model<View>
         }
     }
 
+    public static class NewRow extends Row
+    {
+    	private boolean deleted = false;
+    	
+        @Override
+        @JsonAnyGetter
+        public Map<String, Object> getDataFieldsForSerialization()
+        {
+            Map<String, Object> result = new HashMap<String, Object>();
+            for (Map.Entry<Integer, Object> entry : this.data.entrySet())
+            {
+                result.put(":" + entry.getKey().toString(), entry.getValue());
+            }
+            
+            // If we're deleted, mark it as such
+            if(this.deleted) {
+            	result.put(":deleted", true);
+            }
+
+            return result;
+        }
+        
+        public void setDeleted(boolean deleted)
+        {
+        	this.deleted = deleted;
+        }
+        
+        public boolean isDeleted()
+        {
+        	return this.deleted;
+        }
+    }
+
     @JsonIgnoreProperties({ "address" })
     private static class SingleRow extends Row
     {
@@ -408,6 +461,76 @@ public class View extends Model<View>
         {
             Response response = request.get(base + path() + "/" + id);
             return result(response, true, SingleRow.class);
+        }
+    }
+
+    public static class BulkResults
+    {
+        int rowsUpdated;
+        int rowsDeleted;
+        int rowsCreated;
+        int errors;
+		int byRowIdentifier;
+		int bySid;
+
+        @JsonProperty("Rows Updated")
+        public int getRowsUpdated() {
+            return rowsUpdated;
+        }
+
+        @JsonProperty("Rows Deleted")
+        public int getRowsDeleted() {
+            return rowsDeleted;
+        }
+
+        @JsonProperty("Rows Created")
+        public int getRowsCreated() {
+            return rowsCreated;
+        }
+
+        @JsonProperty("Errors")
+        public int getErrors() {
+            return errors;
+        }
+        
+        @JsonProperty("By RowIdentifier")
+        public int getByRowIdentifier() {
+        	return byRowIdentifier;
+        }
+
+        @JsonProperty("By SID")
+        public int getBySid() {
+        	return bySid;
+        }
+        
+        @JsonProperty("Rows Updated")
+        public void setRowsUpdated(int rowsUpdated) {
+            this.rowsUpdated = rowsUpdated;
+        }
+
+        @JsonProperty("Rows Deleted")
+        public void setRowsDeleted(int rowsDeleted) {
+            this.rowsDeleted = rowsDeleted;
+        }
+
+        @JsonProperty("Rows Created")
+        public void setRowsCreated(int rowsCreated) {
+            this.rowsCreated = rowsCreated;
+        }
+
+        @JsonProperty("Errors")
+        public void setErrors(int errors) {
+            this.errors = errors;
+        }
+        
+        @JsonProperty("By RowIdentifier")
+        public void setByRowIdentifier(int count) {
+        	this.byRowIdentifier = count;
+        }
+        
+        @JsonProperty("By SID")
+        public void setBySid(int count) {
+        	this.bySid = count;
         }
     }
 
@@ -464,6 +587,19 @@ public class View extends Model<View>
         for (Column column : this.columns)
         {
             if (column.id == id)
+            {
+                return column;
+            }
+        }
+        return null;
+    }
+
+    @JsonIgnore
+    public Column getColumnByApiIdentifier(String name)
+    {
+        for (Column column : this.columns)
+        {
+            if (column.getFieldName().equals(name))
             {
                 return column;
             }
@@ -977,10 +1113,13 @@ public class View extends Model<View>
         {
             try { Thread.sleep(ticketCheck); } catch (InterruptedException e) {}
 
-            response = conn.get(publicationEndpoint(), params);
+            response = conn.post(publicationEndpoint(), params);
         }
 
-        return result(response, false, View.class);
+        View v = result(response, false, View.class);
+
+        // Refetch the view to get its full metadata
+        return View.find(v.getId(), conn);
     }
 
     /**
@@ -1222,4 +1361,18 @@ public class View extends Model<View>
 
         return result(response, false, View.class);
     }
+
+    public BulkResults upsert(List<NewRow> records, Connection conn) throws RequestException {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            Response response = conn.post(base + "/id/" + this.id, mapper.writeValueAsString(records));
+            verifyResponseCode(response);
+
+            return mapper.readValue(response.body, BulkResults.class);
+        } catch (IOException e) {
+            throw new RequestException("Unexpected IOException while submitting:", e);
+        }
+    }
+
+
 }
