@@ -538,6 +538,9 @@ public class View extends Model<View>
     String name;
     String description;
     String category;
+	String attribution;
+    String attributionLink;
+    String licenseId;
     Integer rowIdentifierColumnId;
     Long rowsUpdatedAt;
     String displayType;
@@ -667,6 +670,30 @@ public class View extends Model<View>
     	this.category = category;
     }
 
+    public String getAttribution() {
+		return attribution;
+	}
+
+	public void setAttribution(String attribution) {
+		this.attribution = attribution;
+	}
+
+	public String getAttributionLink() {
+		return attributionLink;
+	}
+
+	public void setAttributionLink(String attributionLink) {
+		this.attributionLink = attributionLink;
+	}
+
+	public String getLicenseId() {
+		return licenseId;
+	}
+
+	public void setLicenseId(String licenseId) {
+		this.licenseId = licenseId;
+	}
+    
     public String getDisplayType()
     {
         return displayType;
