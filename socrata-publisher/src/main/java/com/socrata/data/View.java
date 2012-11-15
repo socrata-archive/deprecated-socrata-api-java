@@ -537,6 +537,7 @@ public class View extends Model<View>
     String id;
     String name;
     String description;
+    String category;
     Integer rowIdentifierColumnId;
     Long rowsUpdatedAt;
     String displayType;
@@ -654,6 +655,16 @@ public class View extends Model<View>
     public void setDescription(String description)
     {
         this.description = description;
+    }
+    
+    public String getCategory()
+    {
+    	return category;
+    }
+    
+    public void setCategory(String category)
+    {
+    	this.category = category;
     }
 
     public String getDisplayType()
