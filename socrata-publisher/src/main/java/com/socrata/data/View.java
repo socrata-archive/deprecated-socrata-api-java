@@ -546,6 +546,7 @@ public class View extends Model<View>
     String displayType;
     Integer viewCount;
     String viewType;
+    Boolean publicationAppendEnabled;
     Map<String, Object> metadata;
     Map<String, Object> privateMetadata;
     List<String> flags = new ArrayList<String>();
@@ -724,7 +725,15 @@ public class View extends Model<View>
         this.viewType = viewType;
     }
 
-    public List<String> getFlags()
+    public Boolean getPublicationAppendEnabled() {
+		return publicationAppendEnabled;
+	}
+
+	public void setPublicationAppendEnabled(Boolean publicationAppendEnabled) {
+		this.publicationAppendEnabled = publicationAppendEnabled;
+	}
+
+	public List<String> getFlags()
     {
         return flags;
     }
