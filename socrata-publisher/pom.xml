@@ -5,15 +5,9 @@
     <groupId>com.socrata</groupId>
     <artifactId>socrata-publisher</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>Socrata Publisher API</name>
-
-    <parent>
-        <groupId>com.socrata</groupId>
-        <artifactId>socrata-api</artifactId>
-        <version>1.0.0</version>
-    </parent>
 
     <dependencies>
         <dependency>
@@ -76,7 +70,16 @@
             </descriptorRefs>
           </configuration>
         </plugin>
+	<plugin>
+	  <groupId>org.apache.maven.plugins</groupId>
+	  <artifactId>maven-compiler-plugin</artifactId>
+	  <configuration>
+	    <source>1.5</source>
+	    <target>1.5</target>
+	  </configuration>
+	</plugin>
       </plugins>
+      
     </build>
 </project>
 
